@@ -1,6 +1,6 @@
 const DISCORD_INVITE_CODE = "ys2sJAPhyP";
 const DISCORD_CLIENT_ID = "1549070827176333473"; 
-const REDIRECT_URI = window.location.origin + window.location.pathname;
+const REDIRECT_URI = "https://dcwolfplayz.me/login";
 
 let usersDB = JSON.parse(localStorage.getItem('dcwolf_users_db')) || [
     { id: 101, username: "dcwolf", email: "admin@dcwolf.com", password: "adminpassword", role: "admin" },
