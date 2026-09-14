@@ -13,20 +13,20 @@
 
     <!-- NAVBAR -->
     <header>
-        <a href="index.html" class="brand">
+        <a href="/" class="brand">
             <div class="brand-logo"><i class="fa-solid fa-cube"></i></div>
             DcWolfPlayz Admin
         </a>
         <nav>
-            <a href="index.html" class="nav-btn">Home</a>
-            <a href="rules.html" class="nav-btn">Rules</a>
-            <a href="suggestions.html" class="nav-btn">Suggestions</a>
-            <a href="community.html" class="nav-btn">Community</a>
-            <a href="helpdesk.html" class="nav-btn">Help Desk</a>
+            <a href="/" class="nav-btn">Home</a>
+            <a href="/rules" class="nav-btn">Rules</a>
+            <a href="/suggestions" class="nav-btn">Suggestions</a>
+            <a href="/community" class="nav-btn">Community</a>
+            <a href="/helpdesk" class="nav-btn">Help Desk</a>
         </nav>
         
         <div class="nav-right-actions">
-            <button class="auth-nav-btn" id="loginNavBtn" onclick="openAuthModal()">LOGIN / REGISTER</button>
+            <a href="/login" class="auth-nav-btn" id="loginNavBtn" style="text-decoration:none; display:inline-block; text-align:center;">LOGIN / REGISTER</a>
         </div>
     </header>
 
@@ -211,13 +211,13 @@
     </footer>
 
     <!-- SCRIPT INCLUSION & ADMIN PAGE LOGIC -->
-    <script src="js/script.js"></script>
+    <script src="/js/skript.js"></script>
     <script>
         // Automatic Admin Authentication Guard & Form Pre-fill
         window.addEventListener('DOMContentLoaded', () => {
             if (!currentUser || currentUser.role !== 'admin') {
                 alert("Access Denied! Admin privileges required.");
-                window.location.href = "index.html";
+                window.location.href = "/";
                 return;
             }
 
