@@ -1,27 +1,27 @@
 const DISCORD_INVITE_CODE = "ys2sJAPhyP";
 const DISCORD_CLIENT_ID = "1549070827176333473"; 
-const REDIRECT_URI = window.location.origin + window.location.pathname;[cite: 7]
+const REDIRECT_URI = window.location.origin + window.location.pathname;
 
 let usersDB = JSON.parse(localStorage.getItem('dcwolf_users_db')) || [
     { id: 101, username: "dcwolf", email: "admin@dcwolf.com", password: "adminpassword", role: "admin" },
     { id: 102, username: "Armaan", email: "networkarmaan@gmail.com", password: "Chattha@920", role: "admin" }
-];[cite: 7]
+];
 
 let suggestionsDB = JSON.parse(localStorage.getItem('dcwolf_sug_db')) || [
     { id: 1, author: "Armaan", title: "Add Bedwars Tournament", desc: "Please add weekend tournaments!", status: "approved", upvotes: [], downvotes: [], replies: [] }
-];[cite: 7]
+];
 
 let auditLogsDB = JSON.parse(localStorage.getItem('dcwolf_logs_db')) || [
     { timestamp: new Date().toLocaleString(), log: "System initialized with Default Admin and User DB." }
-];[cite: 7]
+];
 
-let userActivityLogsDB = JSON.parse(localStorage.getItem('dcwolf_user_logs_db')) || [];[cite: 7]
+let userActivityLogsDB = JSON.parse(localStorage.getItem('dcwolf_user_logs_db')) || [];
 
-let currentUser = JSON.parse(localStorage.getItem('dcwolf_current_session')) || null;[cite: 7]
-let isRegisterMode = false;[cite: 7]
-let pendingConfirmAction = null;[cite: 7]
-let isShowingChatHistory = false;[cite: 7]
-let liveChatHTMLCache = "";[cite: 7]
+let currentUser = JSON.parse(localStorage.getItem('dcwolf_current_session')) || null;
+let isRegisterMode = false;
+let pendingConfirmAction = null;
+let isShowingChatHistory = false;
+let liveChatHTMLCache = "";
 
 window.onload = function() {
     saveStateToStorage();
@@ -31,7 +31,7 @@ window.onload = function() {
     }
     fetchDiscordRealStats();
     checkDiscordAuth();
-};[cite: 7]
+};
 
 function saveStateToStorage() {
     localStorage.setItem('dcwolf_users_db', JSON.stringify(usersDB));
@@ -39,7 +39,7 @@ function saveStateToStorage() {
     localStorage.setItem('dcwolf_logs_db', JSON.stringify(auditLogsDB));
     localStorage.setItem('dcwolf_user_logs_db', JSON.stringify(userActivityLogsDB));
     localStorage.setItem('dcwolf_current_session', JSON.stringify(currentUser));
-}[cite: 7]
+}
 
 function logAdminAction(actionText) {
     const adminName = currentUser ? currentUser.username : "System";
@@ -48,7 +48,7 @@ function logAdminAction(actionText) {
         log: `[${adminName.toUpperCase()}] ${actionText}`
     });
     saveStateToStorage();
-}[cite: 7]
+}
 
 function logUserActivity(userText, actionType) {
     const userName = currentUser ? currentUser.username : "Guest User";
@@ -59,7 +59,7 @@ function logUserActivity(userText, actionType) {
         details: userText
     });
     saveStateToStorage();
-}[cite: 7]
+}
 
 /* --- POPUP ALERT & CONFIRM MODALS --- */
 function showAlertModal(title, text) {
@@ -71,19 +71,19 @@ function showAlertModal(title, text) {
     } else {
         alert(`${title}: ${text}`);
     }
-}[cite: 7]
+}
 
 function closeAlertModal() {
     const modal = document.getElementById('alertModal');
     if (modal) modal.classList.remove('active');
-}[cite: 7]
+}
 
 function openCustomConfirm(title, text, onConfirm) {
     document.getElementById('confirmModalTitle').innerText = title;
     document.getElementById('confirmModalText').innerText = text;
     pendingConfirmAction = onConfirm;
     document.getElementById('customConfirmModal').classList.add('active');
-}[cite: 7]
+}
 
 const cancelBtn = document.getElementById('confirmCancelBtn');
 if (cancelBtn) {
@@ -91,7 +91,7 @@ if (cancelBtn) {
         pendingConfirmAction = null;
         document.getElementById('customConfirmModal').classList.remove('active');
     };
-}[cite: 7]
+}
 
 const proceedBtn = document.getElementById('confirmProceedBtn');
 if (proceedBtn) {
@@ -100,13 +100,13 @@ if (proceedBtn) {
         pendingConfirmAction = null;
         document.getElementById('customConfirmModal').classList.remove('active');
     };
-}[cite: 7]
+}
 
 /* --- DISCORD AUTHENTICATION ENGINE --- */
 function loginWithDiscord() {
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify%20email`;
     window.location.href = discordAuthUrl;
-}[cite: 7]
+}
 
 function checkDiscordAuth() {
     const fragment = new URLSearchParams(window.location.hash.slice(1));
@@ -146,7 +146,7 @@ function checkDiscordAuth() {
         })
         .catch(console.error);
     }
-}[cite: 7]
+}
 
 /* --- AUTHENTICATION ENGINE --- */
 function showFormError(msg) {
@@ -156,12 +156,12 @@ function showFormError(msg) {
         alertText.innerText = msg;
         alertBox.style.display = 'flex';
     }
-}[cite: 7]
+}
 
 function hideFormError() {
     const alertBox = document.getElementById('authErrorAlert');
     if (alertBox) alertBox.style.display = 'none';
-}[cite: 7]
+}
 
 function handleAuthSubmit(e) {
     e.preventDefault();
@@ -203,7 +203,7 @@ function handleAuthSubmit(e) {
     saveStateToStorage();
     updateAuthUI();
     window.location.href = "/";
-}[cite: 7]
+}
 
 function updateAuthUI() {
     const loginBtn = document.getElementById('loginNavBtn');
@@ -229,7 +229,7 @@ function updateAuthUI() {
         }
         if (adminBtn) adminBtn.style.display = 'none';
     }
-}[cite: 7]
+}
 
 function handleLogout() {
     logUserActivity("Logged out", "Authentication");
@@ -239,7 +239,7 @@ function handleLogout() {
     if (window.location.pathname.includes('admin')) {
         window.location.href = '/';
     }
-}[cite: 7]
+}
 
 /* --- SUGGESTIONS ENGINE --- */
 function renderPublicSuggestions() {
@@ -307,7 +307,7 @@ function renderPublicSuggestions() {
         `;
         container.appendChild(card);
     });
-}[cite: 7]
+}
 
 function toggleReaction(sugId, type) {
     if (!currentUser) {
@@ -341,7 +341,7 @@ function toggleReaction(sugId, type) {
 
     saveStateToStorage();
     renderPublicSuggestions();
-}[cite: 7]
+}
 
 function submitReply(sugId) {
     if (!currentUser) {
@@ -361,18 +361,18 @@ function submitReply(sugId) {
         saveStateToStorage();
         renderPublicSuggestions();
     }
-}[cite: 7]
+}
 
 function openSuggestionModal() {
     if (!currentUser) { window.location.href = "/login"; return; }
     const modal = document.getElementById('suggestionModal');
     if (modal) modal.classList.add('active');
-}[cite: 7]
+}
 
 function closeSuggestionModal() { 
     const modal = document.getElementById('suggestionModal');
     if (modal) modal.classList.remove('active'); 
-}[cite: 7]
+}
 
 function handleSuggestionSubmit(e) {
     e.preventDefault();
@@ -398,13 +398,13 @@ function handleSuggestionSubmit(e) {
     descInput.value = '';
 
     showAlertModal("SUGGESTION ADDED", "Your suggestion has been submitted successfully! It is currently pending for admin review.");
-}[cite: 7]
+}
 
 /* --- SUPER ADMIN PANEL LOGIC --- */
 function openAdminModal() {
     if (!currentUser || currentUser.role !== 'admin') return;
     window.location.href = "/admin";
-}[cite: 7]
+}
 
 function switchAdminTab(tabName) {
     document.querySelectorAll('.admin-sidebar-btn').forEach(b => b.classList.remove('active'));
@@ -420,7 +420,7 @@ function switchAdminTab(tabName) {
     if (usersTab) usersTab.style.display = (tabName === 'users') ? 'block' : 'none';
     if (logsTab) logsTab.style.display = (tabName === 'logs') ? 'block' : 'none';
     if (userlogsTab) userlogsTab.style.display = (tabName === 'userlogs') ? 'block' : 'none';
-}[cite: 7]
+}
 
 function renderAdminSuggestions() {
     const container = document.getElementById('adminSuggestionsContainer');
@@ -459,7 +459,7 @@ function renderAdminSuggestions() {
         `;
         container.appendChild(box);
     });
-}[cite: 7]
+}
 
 function deleteReply(sugId, replyIndex) {
     const sug = suggestionsDB.find(s => s.id === sugId);
@@ -470,7 +470,7 @@ function deleteReply(sugId, replyIndex) {
         renderAdminSuggestions();
         renderPublicSuggestions();
     }
-}[cite: 7]
+}
 
 function updateSugStatus(id, newStatus) {
     const sug = suggestionsDB.find(s => s.id === id);
@@ -481,7 +481,7 @@ function updateSugStatus(id, newStatus) {
         renderAdminSuggestions();
         renderPublicSuggestions();
     }
-}[cite: 7]
+}
 
 function deleteSug(id) {
     openCustomConfirm("DELETE SUGGESTION", "Are you sure you want to delete this suggestion permanently?", function() {
@@ -491,7 +491,7 @@ function deleteSug(id) {
         renderAdminSuggestions();
         renderPublicSuggestions();
     });
-}[cite: 7]
+}
 
 function renderAdminUsers() {
     const tbody = document.getElementById('adminUsersTableBody');
@@ -512,7 +512,7 @@ function renderAdminUsers() {
         `;
         tbody.appendChild(tr);
     });
-}[cite: 7]
+}
 
 function openEditUserModal(userId) {
     const user = usersDB.find(u => u.id === userId);
@@ -525,9 +525,9 @@ function openEditUserModal(userId) {
     document.getElementById('editRole').value = user.role;
 
     document.getElementById('editUserModal').classList.add('active');
-}[cite: 7]
+}
 
-function closeEditUserModal() { document.getElementById('editUserModal').classList.remove('active'); }[cite: 7]
+function closeEditUserModal() { document.getElementById('editUserModal').classList.remove('active'); }
 
 function saveUserEdit(e) {
     e.preventDefault();
@@ -546,7 +546,7 @@ function saveUserEdit(e) {
         renderAdminUsers();
         closeEditUserModal();
     }
-}[cite: 7]
+}
 
 function deleteUser(userId) {
     const user = usersDB.find(u => u.id === userId);
@@ -558,7 +558,7 @@ function deleteUser(userId) {
             renderAdminUsers();
         });
     }
-}[cite: 7]
+}
 
 function renderAdminLogs() {
     const container = document.getElementById('adminLogsContainer');
@@ -574,7 +574,7 @@ function renderAdminLogs() {
         `;
         container.appendChild(div);
     });
-}[cite: 7]
+}
 
 function renderAdminUserLogs() {
     const container = document.getElementById('adminUserLogsContainer');
@@ -596,7 +596,7 @@ function renderAdminUserLogs() {
         `;
         container.appendChild(div);
     });
-}[cite: 7]
+}
 
 /* --- CHATBOT ENGINE --- */
 function toggleChatWindow() { 
@@ -607,7 +607,7 @@ function toggleChatWindow() {
             toggleChatHistoryView();
         }
     }
-}[cite: 7]
+}
 
 function toggleChatHistoryView() {
     const chatMessages = document.getElementById('chatMessages');
@@ -650,7 +650,7 @@ function toggleChatHistoryView() {
 
         chatMessages.innerHTML = liveChatHTMLCache || `<div class="chat-msg msg-bot">Hello! Welcome back to live chat. How can I help you today?</div>`;
     }
-}[cite: 7]
+}
 
 function sendFaqQuery(q) { 
     const input = document.getElementById('chatInput');
@@ -658,9 +658,9 @@ function sendFaqQuery(q) {
         input.value = q; 
         sendChatMessage(); 
     }
-}[cite: 7]
+}
 
-function handleChatKeyPress(e) { if (e.key === 'Enter') sendChatMessage(); }[cite: 7]
+function handleChatKeyPress(e) { if (e.key === 'Enter') sendChatMessage(); }
 
 function generateBotResponse(userMsg) {
     const msg = userMsg.toLowerCase();
@@ -686,7 +686,7 @@ function generateBotResponse(userMsg) {
     else {
         return `Thanks for reaching out! You can check out the Rules or Help Desk pages for details, or join our <a href="https://discord.gg/ys2sJAPhyP" target="_blank">Discord Server</a> for direct support!`;
     }
-}[cite: 7]
+}
 
 function sendChatMessage() {
     const input = document.getElementById('chatInput');
@@ -707,17 +707,17 @@ function sendChatMessage() {
             container.scrollTop = container.scrollHeight;
         }, 400);
     }
-}[cite: 7]
+}
 
 function openJoinModal() { 
     const joinModal = document.getElementById('joinModal');
     if (joinModal) joinModal.classList.add('active'); 
-}[cite: 7]
+}
 
 function closeJoinModal() { 
     const joinModal = document.getElementById('joinModal');
     if (joinModal) joinModal.classList.remove('active'); 
-}[cite: 7]
+}
 
 async function fetchDiscordRealStats() {
     const discordCounter = document.getElementById('discordMemberCount');
@@ -731,4 +731,4 @@ async function fetchDiscordRealStats() {
     } catch (error) {
         discordCounter.innerHTML = `Active members online right now`;
     }
-}[cite: 7]
+}
