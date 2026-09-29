@@ -35,12 +35,55 @@
             bottom: 50px;
             opacity: 1;
         }
+        /* Custom Edit Modal */
+        .admin-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-modal-box {
+            background: #12131a;
+            border: 1px solid var(--accent-purple);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
 
     <!-- MINECRAFT TOAST NOTIFICATION ELEMENT -->
     <div id="minecraftToast">Settings Saved Successfully!</div>
+
+    <!-- EDIT USER MODAL -->
+    <div class="admin-modal-overlay" id="editUserModal">
+        <div class="admin-modal-box">
+            <h3 style="margin-bottom: 20px; color: var(--accent-purple); font-size: 1rem;"><i class="fa-solid fa-user-pen"></i> Edit User Account</h3>
+            <input type="hidden" id="editUserIndex">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #8e8ea0; display:block; margin-bottom:5px;">Username</label>
+                <input type="text" id="editUsername" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border-dark); padding:10px; border-radius:6px; color:#fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; color: #8e8ea0; display:block; margin-bottom:5px;">Email</label>
+                <input type="email" id="editEmail" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border-dark); padding:10px; border-radius:6px; color:#fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-size: 0.8rem; color: #8e8ea0; display:block; margin-bottom:5px;">Password</label>
+                <input type="text" id="editPassword" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border-dark); padding:10px; border-radius:6px; color:#fff;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveEditedUser()" class="btn-green" style="flex:1; justify-content:center;">SAVE</button>
+                <button onclick="closeEditModal()" style="flex:1; background:#222533; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer;">CANCEL</button>
+            </div>
+        </div>
+    </div>
 
     <!-- NAVBAR -->
     <header>
@@ -77,7 +120,7 @@
                 
                 <div class="admin-layout" style="min-height: 650px; display:flex;">
                     
-                    <!-- SIDEBAR TABS (DB & Backups removed) -->
+                    <!-- SIDEBAR TABS -->
                     <div class="admin-sidebar" style="width:250px; background:#151722; border-right:1px solid var(--border-dark); padding:20px 0; overflow-y:auto; max-height:680px;">
                         <button class="admin-sidebar-btn active" id="tabBtn-sug" onclick="switchAdminTab('sug')">
                             <i class="fa-solid fa-lightbulb"></i> Suggestions
@@ -184,13 +227,13 @@
                         <!-- 4. USERS & IP BANS TAB -->
                         <div id="adminTab-users" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">REGISTERED USERS, ADMIN REVOKE & IP BANS</h4>
-                            <table class="admin-table">
+                            <table class="admin-table" style="width:100%; border-collapse:collapse;">
                                 <thead>
-                                    <tr>
-                                        <th>Username / IP</th>
-                                        <th>Email</th>
-                                        <th>Role Status</th>
-                                        <th>Actions (Revoke / Admin / IP Ban)</th>
+                                    <tr style="border-bottom:1px solid var(--border-dark); text-align:left;">
+                                        <th style="padding:10px;">Username</th>
+                                        <th style="padding:10px;">Email</th>
+                                        <th style="padding:10px;">Role Status</th>
+                                        <th style="padding:10px;">Actions (Edit / Role / Delete / Ban)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminUsersTableBody"></tbody>
@@ -301,7 +344,7 @@
                                     <strong>Block VPN & Proxy Connections</strong>
                                 </label>
                             </div>
-                            <button class="btn-green" onclick="alert('Firewall settings saved!')">SAVE SECURITY RULES</button>
+                            <button class="btn-green" onclick="showMCNotification('Firewall settings saved!')">SAVE SECURITY RULES</button>
                         </div>
 
                         <!-- 10. ADMIN AUDIT LOGS TAB -->
@@ -351,14 +394,11 @@
             }
 
             toast.className = "show";
-            
-            // 3 seconds baad automatic hide ho jayega
             setTimeout(() => {
                 toast.className = toast.className.replace("show", "");
             }, 3000);
         }
 
-        // GLOBAL OVERRIDE: Any external script calling alert() will trigger our bottom notification
         window.alert = function(msg) {
             let isErr = msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('invalid');
             showMCNotification(msg, isErr);
@@ -377,9 +417,9 @@
             }
             
             loadSettingsToForm();
+            renderAdminUsersCustom();
 
             if (typeof renderAdminSuggestions === 'function') renderAdminSuggestions();
-            if (typeof renderAdminUsers === 'function') renderAdminUsers();
             if (typeof renderAdminLogs === 'function') renderAdminLogs();
             if (typeof renderAdminUserLogs === 'function') renderAdminUserLogs();
         });
@@ -394,6 +434,104 @@
                 const el = document.getElementById(`adminTab-${t}`);
                 if (el) el.style.display = (t === tabName) ? 'block' : 'none';
             });
+            if(tabName === 'users') renderAdminUsersCustom();
+        }
+
+        // FULL USERS MANAGEMENT LOGIC (Edit, Role Toggle, Delete, IP Ban/Unban)
+        function renderAdminUsersCustom() {
+            const tbody = document.getElementById('adminUsersTableBody');
+            if(!tbody) return;
+
+            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [
+                {username: "dcwolf", email: "admin@dcwolf.com", password: "adminpassword", role: "admin", ipBanned: false},
+                {username: "Armaan", email: "networkarmaan@gmail.com", password: "Chattha@920", role: "admin", ipBanned: false},
+                {username: "dad_armaan", email: "sonamshiroi@gmail.com", password: "123", role: "user", ipBanned: false}
+            ];
+
+            tbody.innerHTML = "";
+            users.forEach((u, index) => {
+                let tr = document.createElement('tr');
+                tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                
+                let roleColor = u.role === 'admin' ? 'var(--accent-purple)' : 'var(--accent-green)';
+                let roleText = u.role === 'admin' ? 'ADMIN' : 'USER';
+                let banStatus = u.ipBanned ? '<span style="color:#ff3333; font-weight:bold;">[IP BANNED]</span>' : '';
+
+                tr.innerHTML = `
+                    <td style="padding:12px; color:#fff;">${u.username} ${banStatus}</td>
+                    <td style="padding:12px; color:#8e8ea0;">${u.email || 'N/A'}</td>
+                    <td style="padding:12px; font-weight:700; color:${roleColor};">${roleText}</td>
+                    <td style="padding:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="openEditUserModal(${index})" style="background:#3b82f6; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button onclick="toggleUserRole(${index})" style="background:#8b5cf6; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-shield"></i> ${u.role === 'admin' ? 'Demote' : 'Make Admin'}</button>
+                        <button onclick="toggleIpBan(${index})" style="background:${u.ipBanned ? '#10b981' : '#f59e0b'}; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-ban"></i> ${u.ipBanned ? 'Unban IP' : 'IP Ban'}</button>
+                        <button onclick="deleteUserAccount(${index})" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-trash"></i> Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openEditUserModal(index) {
+            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
+            let u = users[index];
+            if(!u) return;
+
+            document.getElementById('editUserIndex').value = index;
+            document.getElementById('editUsername').value = u.username || '';
+            document.getElementById('editEmail').value = u.email || '';
+            document.getElementById('editPassword').value = u.password || '';
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        function saveEditedUser() {
+            let index = document.getElementById('editUserIndex').value;
+            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
+            
+            if(users[index]) {
+                users[index].username = document.getElementById('editUsername').value.trim();
+                users[index].email = document.getElementById('editEmail').value.trim();
+                users[index].password = document.getElementById('editPassword').value.trim();
+                
+                localStorage.setItem('dcwolf_users', JSON.stringify(users));
+                closeEditModal();
+                renderAdminUsersCustom();
+                showMCNotification("User credentials updated successfully!");
+            }
+        }
+
+        function toggleUserRole(index) {
+            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
+            if(users[index]) {
+                users[index].role = users[index].role === 'admin' ? 'user' : 'admin';
+                localStorage.setItem('dcwolf_users', JSON.stringify(users));
+                renderAdminUsersCustom();
+                showMCNotification(`User role updated to ${users[index].role.toUpperCase()}!`);
+            }
+        }
+
+        function toggleIpBan(index) {
+            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
+            if(users[index]) {
+                users[index].ipBanned = !users[index].ipBanned;
+                localStorage.setItem('dcwolf_users', JSON.stringify(users));
+                renderAdminUsersCustom();
+                showMCNotification(users[index].ipBanned ? "User IP Banned successfully!" : "User IP Unbanned successfully!");
+            }
+        }
+
+        function deleteUserAccount(index) {
+            if(confirm("Are you sure you want to delete this user account permanently?")) {
+                let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
+                users.splice(index, 1);
+                localStorage.setItem('dcwolf_users', JSON.stringify(users));
+                renderAdminUsersCustom();
+                showMCNotification("User account deleted permanently!", true);
+            }
         }
 
         function loadSettingsToForm() {
@@ -434,8 +572,7 @@
                 message: document.getElementById('maintMessage').value || "Website is under scheduled upgrades."
             };
             localStorage.setItem('dcwolf_maint_settings', JSON.stringify(data));
-            if (typeof logAdminAction === 'function') logAdminAction(`Updated Maintenance Mode (Active: ${data.active})`);
-            alert("Maintenance settings saved successfully!");
+            showMCNotification("Maintenance settings saved successfully!");
         }
 
         function saveApplicationToggles(e) {
@@ -447,8 +584,7 @@
                 discord: document.getElementById('appDiscord').checked
             };
             localStorage.setItem('dcwolf_app_toggles', JSON.stringify(data));
-            if (typeof logAdminAction === 'function') logAdminAction("Updated Community Application Portals status");
-            alert("Application toggles saved successfully!");
+            showMCNotification("Application toggles saved successfully!");
         }
 
         function saveYtSettings(e) {
@@ -460,8 +596,7 @@
                 xtraUrl: document.getElementById('xtraYtUrl').value
             };
             localStorage.setItem('dcwolf_yt_settings', JSON.stringify(data));
-            if (typeof logAdminAction === 'function') logAdminAction("Updated YouTube Channels on Index page");
-            alert("YouTube settings saved successfully!");
+            showMCNotification("YouTube settings saved successfully!");
         }
 
         function saveStreamSettings(e) {
@@ -473,8 +608,7 @@
                 banner: document.getElementById('sitewideBannerText').value
             };
             localStorage.setItem('dcwolf_stream_settings', JSON.stringify(data));
-            if (typeof logAdminAction === 'function') logAdminAction(`Updated Live Stream settings (Live Status: ${data.isLive})`);
-            alert("Live Stream settings updated!");
+            showMCNotification("Live Stream settings updated!");
         }
 
         function saveMcSettings(e) {
@@ -484,16 +618,14 @@
                 version: document.getElementById('mcServerVersion').value
             };
             localStorage.setItem('dcwolf_mc_settings', JSON.stringify(data));
-            if (typeof logAdminAction === 'function') logAdminAction(`Updated Minecraft Server Info (IP: '${data.ip}')`);
-            alert("Minecraft Server Info saved!");
+            showMCNotification("Minecraft Server Info saved!");
         }
 
         function toggleFeatureFlag(flagKey, isChecked) {
             let flags = JSON.parse(localStorage.getItem('dcwolf_feature_flags')) || {};
             flags[flagKey] = isChecked;
             localStorage.setItem('dcwolf_feature_flags', JSON.stringify(flags));
-            if (typeof logAdminAction === 'function') logAdminAction(`Toggled Feature '${flagKey}' to ${isChecked}`);
-            alert(`Feature '${flagKey}' updated!`);
+            showMCNotification(`Feature '${flagKey}' updated!`);
         }
     </script>
 </body>
