@@ -95,7 +95,7 @@
                             <div id="adminSuggestionsContainer"></div>
                         </div>
 
-                        <!-- 2. MAINTENANCE MODE TAB (NEW) -->
+                        <!-- 2. MAINTENANCE MODE TAB -->
                         <div id="adminTab-maintenance" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">WEBSITE MAINTENANCE MODE CONTROLS</h4>
                             <form onsubmit="saveMaintenanceSettings(event)">
@@ -106,22 +106,22 @@
                                     </label>
                                 </div>
                                 <div class="form-group">
-                                    <label>Estimated Time Remaining / Duration</label>
-                                    <input type="text" id="maintDuration" placeholder="e.g. 2 Hours Remaining">
+                                    <label>Estimated Time Remaining / Duration (e.g. ~2 Hours)</label>
+                                    <input type="text" id="maintDuration" placeholder="e.g. ~2 Hours">
                                 </div>
                                 <div class="form-group">
-                                    <label>Expected Completion Date & Time</label>
+                                    <label>Expected Completion Date & Time (Shown on ETA Badge)</label>
                                     <input type="text" id="maintEta" placeholder="e.g. 2026-09-30 20:00 IST">
                                 </div>
                                 <div class="form-group">
                                     <label>Maintenance Announcement / What's New Description</label>
                                     <textarea id="maintMessage" rows="3" style="width:100%; background:rgba(255,255,255,0.03); border:1px solid var(--border-dark); border-radius:8px; padding:10px; color:#fff;" placeholder="We are upgrading custom features..."></textarea>
                                 </div>
-                                <button type="submit" class="btn-green" style="background:#fb923c; color:#000;">SAVE MAINTENANCE SETTINGS</button>
+                                <button type="submit" class="btn-green" style="background:#fb923c; color:#000;">SAVE & APPLY MAINTENANCE MODE</button>
                             </form>
                         </div>
 
-                        <!-- 3. APPLICATIONS PORTAL TOGGLES TAB (NEW) -->
+                        <!-- 3. APPLICATIONS PORTAL TOGGLES TAB -->
                         <div id="adminTab-apps" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">COMMUNITY APPLICATIONS MANAGER</h4>
                             <form onsubmit="saveApplicationToggles(event)">
@@ -153,7 +153,7 @@
                             </form>
                         </div>
 
-                        <!-- 4. USERS & IP BANS TAB (UPDATED) -->
+                        <!-- 4. USERS & IP BANS TAB -->
                         <div id="adminTab-users" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">REGISTERED USERS, ADMIN REVOKE & IP BANS</h4>
                             <table class="admin-table">
@@ -165,9 +165,7 @@
                                         <th>Actions (Revoke / Admin / IP Ban)</th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminUsersTableBody">
-                                    <!-- Dynamic rows loaded via script -->
-                                </tbody>
+                                <tbody id="adminUsersTableBody"></tbody>
                             </table>
                         </div>
 
@@ -260,7 +258,7 @@
                             </div>
                         </div>
 
-                        <!-- 9. SECURITY & FIREWALL TAB (NEW) -->
+                        <!-- 9. SECURITY & FIREWALL TAB -->
                         <div id="adminTab-security" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">SECURITY & DDOS FIREWALL PROTECTION</h4>
                             <div style="background:#161824; padding:18px; border-radius:10px; margin-bottom:12px;">
@@ -278,7 +276,7 @@
                             <button class="btn-green" onclick="alert('Firewall settings saved!')">SAVE SECURITY RULES</button>
                         </div>
 
-                        <!-- 10. DATABASE & BACKUPS TAB (NEW) -->
+                        <!-- 10. DATABASE & BACKUPS TAB -->
                         <div id="adminTab-backups" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">DATABASE & CLOUD BACKUPS</h4>
                             <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Last automated backup synced successfully today at 04:00 AM IST.</p>
@@ -314,7 +312,6 @@
     <!-- SCRIPT INCLUSION & ADMIN PAGE LOGIC -->
     <script src="/js/skript.js"></script>
     <script>
-        // Automatic Admin Authentication Guard & Form Pre-fill
         window.addEventListener('DOMContentLoaded', () => {
             if (typeof currentUser === 'undefined' || !currentUser || currentUser.role !== 'admin') {
                 alert("Access Denied! Admin privileges required.");
@@ -327,10 +324,8 @@
                 sessionUserEl.innerText = `Logged in as: ${currentUser.username}`;
             }
             
-            // Pre-fill existing settings
             loadSettingsToForm();
 
-            // Render Tab data safely if functions exist
             if (typeof renderAdminSuggestions === 'function') renderAdminSuggestions();
             if (typeof renderAdminUsers === 'function') renderAdminUsers();
             if (typeof renderAdminLogs === 'function') renderAdminLogs();
@@ -350,33 +345,28 @@
         }
 
         function loadSettingsToForm() {
-            // YouTube
             const yt = JSON.parse(localStorage.getItem('dcwolf_yt_settings')) || {};
             if (yt.mainTitle && document.getElementById('mainYtTitle')) document.getElementById('mainYtTitle').value = yt.mainTitle;
             if (yt.mainUrl && document.getElementById('mainYtUrl')) document.getElementById('mainYtUrl').value = yt.mainUrl;
             if (yt.xtraTitle && document.getElementById('xtraYtTitle')) document.getElementById('xtraYtTitle').value = yt.xtraTitle;
             if (yt.xtraUrl && document.getElementById('xtraYtUrl')) document.getElementById('xtraYtUrl').value = yt.xtraUrl;
 
-            // Stream & Banner
             const stream = JSON.parse(localStorage.getItem('dcwolf_stream_settings')) || {};
             if (document.getElementById('isLiveNow')) document.getElementById('isLiveNow').checked = !!stream.isLive;
             if (stream.liveUrl && document.getElementById('liveStreamUrl')) document.getElementById('liveStreamUrl').value = stream.liveUrl;
             if (stream.schedule && document.getElementById('streamSchedule')) document.getElementById('streamSchedule').value = stream.schedule;
             if (stream.banner && document.getElementById('sitewideBannerText')) document.getElementById('sitewideBannerText').value = stream.banner;
 
-            // Minecraft
             const mc = JSON.parse(localStorage.getItem('dcwolf_mc_settings')) || {};
             if (mc.ip && document.getElementById('mcServerIp')) document.getElementById('mcServerIp').value = mc.ip;
             if (mc.version && document.getElementById('mcServerVersion')) document.getElementById('mcServerVersion').value = mc.version;
 
-            // Maintenance
             const maint = JSON.parse(localStorage.getItem('dcwolf_maint_settings')) || {};
             if (document.getElementById('maintenanceModeToggle')) document.getElementById('maintenanceModeToggle').checked = !!maint.active;
             if (maint.duration && document.getElementById('maintDuration')) document.getElementById('maintDuration').value = maint.duration;
             if (maint.eta && document.getElementById('maintEta')) document.getElementById('maintEta').value = maint.eta;
             if (maint.message && document.getElementById('maintMessage')) document.getElementById('maintMessage').value = maint.message;
 
-            // Flags
             const flags = JSON.parse(localStorage.getItem('dcwolf_feature_flags')) || {};
             if (document.getElementById('flagTournament')) document.getElementById('flagTournament').checked = !!flags.tournament;
             if (document.getElementById('flagLeaderboard')) document.getElementById('flagLeaderboard').checked = !!flags.leaderboard;
@@ -387,13 +377,13 @@
             e.preventDefault();
             const data = {
                 active: document.getElementById('maintenanceModeToggle').checked,
-                duration: document.getElementById('maintDuration').value,
-                eta: document.getElementById('maintEta').value,
-                message: document.getElementById('maintMessage').value
+                duration: document.getElementById('maintDuration').value || "~2 Hours",
+                eta: document.getElementById('maintEta').value || "Soon",
+                message: document.getElementById('maintMessage').value || "Website is under scheduled upgrades."
             };
             localStorage.setItem('dcwolf_maint_settings', JSON.stringify(data));
             if (typeof logAdminAction === 'function') logAdminAction(`Updated Maintenance Mode (Active: ${data.active})`);
-            alert("Maintenance settings saved successfully!");
+            alert("Maintenance settings saved & applied successfully! Visitors will now see the maintenance screen.");
         }
 
         function saveApplicationToggles(e) {
@@ -426,8 +416,7 @@
             e.preventDefault();
             const data = {
                 isLive: document.getElementById('isLiveNow').checked,
-                liveUrl: document.getElementById('liveStreamUrl').value,
-                schedule: document.getElementById('streamSchedule').value,
+                liveUrl: document.getElementById('liveStreamUrl').value,ut: document.getElementById('streamSchedule').value,
                 banner: document.getElementById('sitewideBannerText').value
             };
             localStorage.setItem('dcwolf_stream_settings', JSON.stringify(data));
