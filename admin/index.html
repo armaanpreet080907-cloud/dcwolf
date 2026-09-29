@@ -399,14 +399,12 @@
             }, 3000);
         }
 
-        // GLOBAL OVERRIDE: Browser confirm aur alert ko completely block karke Toast mein convert karna
         window.alert = function(msg) {
             let isErr = msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('invalid');
             showMCNotification(msg, isErr);
         };
 
         window.confirm = function(msg) {
-            // Admin panel ke andar direct true return karenge taaki browser ka ugly confirm pop-up na aaye
             return true;
         };
 
@@ -443,18 +441,26 @@
             if(tabName === 'users') renderAdminUsersCustom();
         }
 
-        // FIXED USERS MANAGEMENT LOGIC (Username based tracking for robust editing/deleting)
+        // ROBUST USERS MANAGEMENT LOGIC (Pehle se registered users ko direct fetch karega)
         function renderAdminUsersCustom() {
             const tbody = document.getElementById('adminUsersTableBody');
             if(!tbody) return;
 
-            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [
-                {username: "dcwolf", email: "admin@dcwolf.com", password: "adminpassword", role: "admin", ipBanned: false},
-                {username: "Armaan", email: "networkarmaan@gmail.com", password: "Chattha@920", role: "admin", ipBanned: false},
-                {username: "dad_armaan", email: "sonamshiroi@gmail.com", password: "123", role: "user", ipBanned: false}
-            ];
+            let users = JSON.parse(localStorage.getItem('dcwolf_users'));
+            if (!users || !Array.isArray(users)) {
+                users = [
+                    {username: "dcwolf", email: "admin@dcwolf.com", password: "adminpassword", role: "admin", ipBanned: false},
+                    {username: "Armaan", email: "networkarmaan@gmail.com", password: "Chattha@920", role: "admin", ipBanned: false}
+                ];
+                localStorage.setItem('dcwolf_users', JSON.stringify(users));
+            }
 
             tbody.innerHTML = "";
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding:15px; text-align:center; color:#8e8ea0;">No registered users found.</td></tr>`;
+                return;
+            }
+
             users.forEach((u) => {
                 let tr = document.createElement('tr');
                 tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
@@ -464,7 +470,7 @@
                 let banStatus = u.ipBanned ? '<span style="color:#ff3333; font-weight:bold;">[IP BANNED]</span>' : '';
 
                 tr.innerHTML = `
-                    <td style="padding:12px; color:#fff;">${u.username} ${banStatus}</td>
+                    <td style="padding:12px; color:#fff;">${u.username || 'Unknown'} ${banStatus}</td>
                     <td style="padding:12px; color:#8e8ea0;">${u.email || 'N/A'}</td>
                     <td style="padding:12px; font-weight:700; color:${roleColor};">${roleText}</td>
                     <td style="padding:12px; display:flex; gap:8px; flex-wrap:wrap;">
