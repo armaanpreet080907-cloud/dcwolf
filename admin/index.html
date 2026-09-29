@@ -8,8 +8,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Minecraft Action Bar / Toast Notification Style */
+        #minecraftToast {
+            visibility: hidden;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(15, 16, 23, 0.95);
+            color: #00ff66;
+            border: 2px solid #00ff66;
+            font-family: 'Press Start 2P', cursive, monospace;
+            font-size: 0.75rem;
+            padding: 14px 24px;
+            border-radius: 8px;
+            z-index: 999999;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+            text-align: center;
+            transition: opacity 0.3s ease, bottom 0.3s ease;
+            opacity: 0;
+        }
+        #minecraftToast.show {
+            visibility: visible;
+            bottom: 50px;
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
+
+    <!-- MINECRAFT TOAST NOTIFICATION ELEMENT -->
+    <div id="minecraftToast">Settings Saved Successfully!</div>
 
     <!-- NAVBAR -->
     <header>
@@ -273,7 +303,7 @@
                                     <strong>Block VPN & Proxy Connections</strong>
                                 </label>
                             </div>
-                            <button class="btn-green" onclick="alert('Firewall settings saved!')">SAVE SECURITY RULES</button>
+                            <button class="btn-green" onclick="showMCNotification('Firewall settings saved!')">SAVE SECURITY RULES</button>
                         </div>
 
                         <!-- 10. DATABASE & BACKUPS TAB -->
@@ -281,8 +311,8 @@
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">DATABASE & CLOUD BACKUPS</h4>
                             <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Last automated backup synced successfully today at 04:00 AM IST.</p>
                             <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                                <button class="btn-green" onclick="alert('Database SQL Backup Downloaded!')"><i class="fa-solid fa-download"></i> Download Full Backup (.SQL)</button>
-                                <button class="btn-green" style="background:#8b5cf6; color:#fff;" onclick="alert('Restore point loaded successfully!')"><i class="fa-solid fa-history"></i> Restore Previous Point</button>
+                                <button class="btn-green" onclick="showMCNotification('Database SQL Backup Downloaded!')"><i class="fa-solid fa-download"></i> Download Full Backup (.SQL)</button>
+                                <button class="btn-green" style="background:#8b5cf6; color:#fff;" onclick="showMCNotification('Restore point loaded successfully!')"><i class="fa-solid fa-history"></i> Restore Previous Point</button>
                             </div>
                         </div>
 
@@ -312,10 +342,38 @@
     <!-- SCRIPT INCLUSION & ADMIN PAGE LOGIC -->
     <script src="/js/skript.js"></script>
     <script>
+        // Minecraft Action Bar Style Toast Function
+        function showMCNotification(message, isError = false) {
+            let toast = document.getElementById('minecraftToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'minecraftToast';
+                document.body.appendChild(toast);
+            }
+
+            toast.innerText = message;
+            if (isError) {
+                toast.style.color = '#ff3333';
+                toast.style.borderColor = '#ff3333';
+                toast.style.boxShadow = '0 0 20px rgba(255, 51, 51, 0.3)';
+            } else {
+                toast.style.color = '#00ff66';
+                toast.style.borderColor = '#00ff66';
+                toast.style.boxShadow = '0 0 20px rgba(0, 255, 102, 0.3)';
+            }
+
+            toast.className = "show";
+            
+            // 3 seconds baad automatic hide ho jayega
+            setTimeout(() => {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             if (typeof currentUser === 'undefined' || !currentUser || currentUser.role !== 'admin') {
-                alert("Access Denied! Admin privileges required.");
-                window.location.href = "/";
+                showMCNotification("Access Denied! Admin privileges required.", true);
+                setTimeout(() => { window.location.href = "/"; }, 1500);
                 return;
             }
 
@@ -383,7 +441,7 @@
             };
             localStorage.setItem('dcwolf_maint_settings', JSON.stringify(data));
             if (typeof logAdminAction === 'function') logAdminAction(`Updated Maintenance Mode (Active: ${data.active})`);
-            alert("Maintenance settings saved & applied successfully! Visitors will now see the maintenance screen.");
+            showMCNotification("Maintenance settings saved successfully!");
         }
 
         function saveApplicationToggles(e) {
@@ -396,7 +454,7 @@
             };
             localStorage.setItem('dcwolf_app_toggles', JSON.stringify(data));
             if (typeof logAdminAction === 'function') logAdminAction("Updated Community Application Portals status");
-            alert("Application toggles saved successfully!");
+            showMCNotification("Application toggles saved successfully!");
         }
 
         function saveYtSettings(e) {
@@ -409,19 +467,20 @@
             };
             localStorage.setItem('dcwolf_yt_settings', JSON.stringify(data));
             if (typeof logAdminAction === 'function') logAdminAction("Updated YouTube Channels on Index page");
-            alert("YouTube settings saved successfully!");
+            showMCNotification("YouTube settings saved successfully!");
         }
 
         function saveStreamSettings(e) {
             e.preventDefault();
             const data = {
                 isLive: document.getElementById('isLiveNow').checked,
-                liveUrl: document.getElementById('liveStreamUrl').value,ut: document.getElementById('streamSchedule').value,
+                liveUrl: document.getElementById('liveStreamUrl').value,
+                schedule: document.getElementById('streamSchedule').value,
                 banner: document.getElementById('sitewideBannerText').value
             };
             localStorage.setItem('dcwolf_stream_settings', JSON.stringify(data));
             if (typeof logAdminAction === 'function') logAdminAction(`Updated Live Stream settings (Live Status: ${data.isLive})`);
-            alert("Live Stream and Schedule settings updated!");
+            showMCNotification("Live Stream settings updated!");
         }
 
         function saveMcSettings(e) {
@@ -432,7 +491,7 @@
             };
             localStorage.setItem('dcwolf_mc_settings', JSON.stringify(data));
             if (typeof logAdminAction === 'function') logAdminAction(`Updated Minecraft Server Info (IP: '${data.ip}')`);
-            alert("Minecraft Server Info saved!");
+            showMCNotification("Minecraft Server Info saved!");
         }
 
         function toggleFeatureFlag(flagKey, isChecked) {
@@ -440,6 +499,7 @@
             flags[flagKey] = isChecked;
             localStorage.setItem('dcwolf_feature_flags', JSON.stringify(flags));
             if (typeof logAdminAction === 'function') logAdminAction(`Toggled Feature '${flagKey}' to ${isChecked}`);
+            showMCNotification(`Feature '${flagKey}' updated!`);
         }
     </script>
 </body>
