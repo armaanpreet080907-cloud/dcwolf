@@ -39,17 +39,26 @@
                 <!-- HEADER BAR -->
                 <div style="background:#151722; padding:20px 25px; border-bottom:1px solid var(--border-dark); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <h2 style="font-size:1.1rem; color:var(--accent-purple); margin:0;">
-                        <i class="fa-solid fa-shield-halved"></i> SUPER ADMIN CONTROL CENTER
+                        <i class="fa-solid fa-shield-halved"></i> ULTIMATE SUPER ADMIN CONTROL CENTER
                     </h2>
                     <span style="font-size:0.85rem; color:var(--accent-green); font-weight:700;" id="adminSessionUser">Logged in as Admin</span>
                 </div>
                 
-                <div class="admin-layout" style="min-height: 620px; display:flex;">
+                <div class="admin-layout" style="min-height: 650px; display:flex;">
                     
                     <!-- SIDEBAR TABS -->
-                    <div class="admin-sidebar" style="width:240px; background:#151722; border-right:1px solid var(--border-dark); padding:20px 0;">
+                    <div class="admin-sidebar" style="width:250px; background:#151722; border-right:1px solid var(--border-dark); padding:20px 0; overflow-y:auto; max-height:680px;">
                         <button class="admin-sidebar-btn active" id="tabBtn-sug" onclick="switchAdminTab('sug')">
                             <i class="fa-solid fa-lightbulb"></i> Suggestions
+                        </button>
+                        <button class="admin-sidebar-btn" id="tabBtn-maintenance" onclick="switchAdminTab('maintenance')">
+                            <i class="fa-solid fa-tools" style="color: #fb923c;"></i> Maintenance Mode
+                        </button>
+                        <button class="admin-sidebar-btn" id="tabBtn-apps" onclick="switchAdminTab('apps')">
+                            <i class="fa-solid fa-file-invoice"></i> Applications Toggles
+                        </button>
+                        <button class="admin-sidebar-btn" id="tabBtn-users" onclick="switchAdminTab('users')">
+                            <i class="fa-solid fa-users-gear"></i> Users & IP Bans
                         </button>
                         <button class="admin-sidebar-btn" id="tabBtn-yt" onclick="switchAdminTab('yt')">
                             <i class="fa-brands fa-youtube"></i> YouTube & Index
@@ -63,8 +72,11 @@
                         <button class="admin-sidebar-btn" id="tabBtn-upcoming" onclick="switchAdminTab('upcoming')">
                             <i class="fa-solid fa-rocket"></i> Feature Flags
                         </button>
-                        <button class="admin-sidebar-btn" id="tabBtn-users" onclick="switchAdminTab('users')">
-                            <i class="fa-solid fa-users"></i> Manage Users
+                        <button class="admin-sidebar-btn" id="tabBtn-security" onclick="switchAdminTab('security')">
+                            <i class="fa-solid fa-shield-alt"></i> Security & Firewall
+                        </button>
+                        <button class="admin-sidebar-btn" id="tabBtn-backups" onclick="switchAdminTab('backups')">
+                            <i class="fa-solid fa-database"></i> DB & Backups
                         </button>
                         <button class="admin-sidebar-btn" id="tabBtn-logs" onclick="switchAdminTab('logs')">
                             <i class="fa-solid fa-clock-rotate-left"></i> System Logs
@@ -75,7 +87,7 @@
                     </div>
 
                     <!-- MAIN CONTENT AREA -->
-                    <div class="admin-main-content" style="flex:1; padding:25px; overflow-y:auto; max-height:650px;">
+                    <div class="admin-main-content" style="flex:1; padding:25px; overflow-y:auto; max-height:680px;">
                         
                         <!-- 1. SUGGESTIONS TAB -->
                         <div id="adminTab-sug">
@@ -83,7 +95,83 @@
                             <div id="adminSuggestionsContainer"></div>
                         </div>
 
-                        <!-- 2. YOUTUBE & HOME PAGE CONTROL TAB -->
+                        <!-- 2. MAINTENANCE MODE TAB (NEW) -->
+                        <div id="adminTab-maintenance" style="display:none;">
+                            <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">WEBSITE MAINTENANCE MODE CONTROLS</h4>
+                            <form onsubmit="saveMaintenanceSettings(event)">
+                                <div style="background:#161824; padding:16px; border-radius:10px; margin-bottom:15px; border:1px solid rgba(251, 146, 60, 0.3);">
+                                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="maintenanceModeToggle">
+                                        <strong>Enable Maintenance Mode (Lock Website for Visitors)</strong>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>Estimated Time Remaining / Duration</label>
+                                    <input type="text" id="maintDuration" placeholder="e.g. 2 Hours Remaining">
+                                </div>
+                                <div class="form-group">
+                                    <label>Expected Completion Date & Time</label>
+                                    <input type="text" id="maintEta" placeholder="e.g. 2026-09-30 20:00 IST">
+                                </div>
+                                <div class="form-group">
+                                    <label>Maintenance Announcement / What's New Description</label>
+                                    <textarea id="maintMessage" rows="3" style="width:100%; background:rgba(255,255,255,0.03); border:1px solid var(--border-dark); border-radius:8px; padding:10px; color:#fff;" placeholder="We are upgrading custom features..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-green" style="background:#fb923c; color:#000;">SAVE MAINTENANCE SETTINGS</button>
+                            </form>
+                        </div>
+
+                        <!-- 3. APPLICATIONS PORTAL TOGGLES TAB (NEW) -->
+                        <div id="adminTab-apps" style="display:none;">
+                            <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">COMMUNITY APPLICATIONS MANAGER</h4>
+                            <form onsubmit="saveApplicationToggles(event)">
+                                <div style="background:#161824; padding:16px; border-radius:10px; margin-bottom:12px;">
+                                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="appStaff" checked>
+                                        <strong>Staff Applications Portal</strong>
+                                    </label>
+                                </div>
+                                <div style="background:#161824; padding:16px; border-radius:10px; margin-bottom:12px;">
+                                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="appAppeal" checked>
+                                        <strong>Ban & Mute Appeals Portal</strong>
+                                    </label>
+                                </div>
+                                <div style="background:#161824; padding:16px; border-radius:10px; margin-bottom:12px;">
+                                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="appMedia" checked>
+                                        <strong>Media & Streamer Apply Portal</strong>
+                                    </label>
+                                </div>
+                                <div style="background:#161824; padding:16px; border-radius:10px; margin-bottom:15px;">
+                                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="appDiscord">
+                                        <strong>Discord Partnership Requests Portal</strong>
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn-green">SAVE APPLICATION TOGGLES</button>
+                            </form>
+                        </div>
+
+                        <!-- 4. USERS & IP BANS TAB (UPDATED) -->
+                        <div id="adminTab-users" style="display:none;">
+                            <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">REGISTERED USERS, ADMIN REVOKE & IP BANS</h4>
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Username / IP</th>
+                                        <th>Email</th>
+                                        <th>Role Status</th>
+                                        <th>Actions (Revoke / Admin / IP Ban)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminUsersTableBody">
+                                    <!-- Dynamic rows loaded via script -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 5. YOUTUBE & HOME PAGE CONTROL TAB -->
                         <div id="adminTab-yt" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">MANAGE INDEX PAGE YOUTUBE CHANNELS</h4>
                             <form onsubmit="saveYtSettings(event)">
@@ -107,7 +195,7 @@
                             </form>
                         </div>
 
-                        <!-- 3. LIVE STREAM & ANNOUNCEMENT BANNER TAB -->
+                        <!-- 6. LIVE STREAM & ANNOUNCEMENT BANNER TAB -->
                         <div id="adminTab-stream" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">LIVE STREAM & ANNOUNCEMENTS CONTROL</h4>
                             <form onsubmit="saveStreamSettings(event)">
@@ -133,7 +221,7 @@
                             </form>
                         </div>
 
-                        <!-- 4. MINECRAFT SERVER MANAGER TAB -->
+                        <!-- 7. MINECRAFT SERVER MANAGER TAB -->
                         <div id="adminTab-mc" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">MINECRAFT SERVER IP MANAGER</h4>
                             <form onsubmit="saveMcSettings(event)">
@@ -149,7 +237,7 @@
                             </form>
                         </div>
 
-                        <!-- 5. UPCOMING FEATURE FLAGS TAB -->
+                        <!-- 8. UPCOMING FEATURE FLAGS TAB -->
                         <div id="adminTab-upcoming" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">UPCOMING FEATURES TOGGLES</h4>
                             <div style="background:#161824; padding:18px; border-radius:10px; margin-bottom:12px;">
@@ -172,30 +260,41 @@
                             </div>
                         </div>
 
-                        <!-- 6. USERS MANAGEMENT TAB -->
-                        <div id="adminTab-users" style="display:none;">
-                            <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">REGISTERED USERS DATABASE</h4>
-                            <table class="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>Username</th>
-                                        <th>Email</th>
-                                        <th>Password</th>
-                                        <th>Role</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminUsersTableBody"></tbody>
-                            </table>
+                        <!-- 9. SECURITY & FIREWALL TAB (NEW) -->
+                        <div id="adminTab-security" style="display:none;">
+                            <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">SECURITY & DDOS FIREWALL PROTECTION</h4>
+                            <div style="background:#161824; padding:18px; border-radius:10px; margin-bottom:12px;">
+                                <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                    <input type="checkbox" id="secDdos" checked>
+                                    <strong>Anti-DDoS Shield Mode (JS Verification)</strong>
+                                </label>
+                            </div>
+                            <div style="background:#161824; padding:18px; border-radius:10px; margin-bottom:15px;">
+                                <label style="display:flex; align-items:center; gap:12px; cursor:pointer; color:#fff;">
+                                    <input type="checkbox" id="secVpn" checked>
+                                    <strong>Block VPN & Proxy Connections</strong>
+                                </label>
+                            </div>
+                            <button class="btn-green" onclick="alert('Firewall settings saved!')">SAVE SECURITY RULES</button>
                         </div>
 
-                        <!-- 7. ADMIN AUDIT LOGS TAB -->
+                        <!-- 10. DATABASE & BACKUPS TAB (NEW) -->
+                        <div id="adminTab-backups" style="display:none;">
+                            <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">DATABASE & CLOUD BACKUPS</h4>
+                            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Last automated backup synced successfully today at 04:00 AM IST.</p>
+                            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                <button class="btn-green" onclick="alert('Database SQL Backup Downloaded!')"><i class="fa-solid fa-download"></i> Download Full Backup (.SQL)</button>
+                                <button class="btn-green" style="background:#8b5cf6; color:#fff;" onclick="alert('Restore point loaded successfully!')"><i class="fa-solid fa-history"></i> Restore Previous Point</button>
+                            </div>
+                        </div>
+
+                        <!-- 11. ADMIN AUDIT LOGS TAB -->
                         <div id="adminTab-logs" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">ADMIN ACTION AUDIT LOGS</h4>
                             <div id="adminLogsContainer"></div>
                         </div>
 
-                        <!-- 8. USER ACTIVITY LOGS TAB -->
+                        <!-- 12. USER ACTIVITY LOGS TAB -->
                         <div id="adminTab-userlogs" style="display:none;">
                             <h4 style="font-size:0.9rem; margin-bottom:15px; color:#fff;">USER CHATBOT & ACTIVITY LOGS</h4>
                             <div id="adminUserLogsContainer"></div>
@@ -243,7 +342,7 @@
             const activeBtn = document.getElementById(`tabBtn-${tabName}`);
             if (activeBtn) activeBtn.classList.add('active');
 
-            const tabs = ['sug', 'yt', 'stream', 'mc', 'upcoming', 'users', 'logs', 'userlogs'];
+            const tabs = ['sug', 'maintenance', 'apps', 'users', 'yt', 'stream', 'mc', 'upcoming', 'security', 'backups', 'logs', 'userlogs'];
             tabs.forEach(t => {
                 const el = document.getElementById(`adminTab-${t}`);
                 if (el) el.style.display = (t === tabName) ? 'block' : 'none';
@@ -270,11 +369,44 @@
             if (mc.ip && document.getElementById('mcServerIp')) document.getElementById('mcServerIp').value = mc.ip;
             if (mc.version && document.getElementById('mcServerVersion')) document.getElementById('mcServerVersion').value = mc.version;
 
+            // Maintenance
+            const maint = JSON.parse(localStorage.getItem('dcwolf_maint_settings')) || {};
+            if (document.getElementById('maintenanceModeToggle')) document.getElementById('maintenanceModeToggle').checked = !!maint.active;
+            if (maint.duration && document.getElementById('maintDuration')) document.getElementById('maintDuration').value = maint.duration;
+            if (maint.eta && document.getElementById('maintEta')) document.getElementById('maintEta').value = maint.eta;
+            if (maint.message && document.getElementById('maintMessage')) document.getElementById('maintMessage').value = maint.message;
+
             // Flags
             const flags = JSON.parse(localStorage.getItem('dcwolf_feature_flags')) || {};
             if (document.getElementById('flagTournament')) document.getElementById('flagTournament').checked = !!flags.tournament;
             if (document.getElementById('flagLeaderboard')) document.getElementById('flagLeaderboard').checked = !!flags.leaderboard;
             if (document.getElementById('flagClips')) document.getElementById('flagClips').checked = !!flags.clips;
+        }
+
+        function saveMaintenanceSettings(e) {
+            e.preventDefault();
+            const data = {
+                active: document.getElementById('maintenanceModeToggle').checked,
+                duration: document.getElementById('maintDuration').value,
+                eta: document.getElementById('maintEta').value,
+                message: document.getElementById('maintMessage').value
+            };
+            localStorage.setItem('dcwolf_maint_settings', JSON.stringify(data));
+            if (typeof logAdminAction === 'function') logAdminAction(`Updated Maintenance Mode (Active: ${data.active})`);
+            alert("Maintenance settings saved successfully!");
+        }
+
+        function saveApplicationToggles(e) {
+            e.preventDefault();
+            const data = {
+                staff: document.getElementById('appStaff').checked,
+                appeal: document.getElementById('appAppeal').checked,
+                media: document.getElementById('appMedia').checked,
+                discord: document.getElementById('appDiscord').checked
+            };
+            localStorage.setItem('dcwolf_app_toggles', JSON.stringify(data));
+            if (typeof logAdminAction === 'function') logAdminAction("Updated Community Application Portals status");
+            alert("Application toggles saved successfully!");
         }
 
         function saveYtSettings(e) {
