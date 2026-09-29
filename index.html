@@ -286,23 +286,42 @@
 
     <script src="/js/skript.js"></script>
     <script>
-        // Maintenance Mode Status Checker
-        window.addEventListener('DOMContentLoaded', () => {
+        // Real-time Maintenance Mode Checker Function
+        function checkMaintenanceStatus() {
             const maintSettings = JSON.parse(localStorage.getItem('dcwolf_maint_settings')) || {};
-            const currentUser = JSON.parse(localStorage.getItem('dcwolf_current_user')) || null;
+            
+            let currentUser = null;
+            try {
+                currentUser = JSON.parse(localStorage.getItem('dcwolf_current_user')) || 
+                              JSON.parse(localStorage.getItem('currentUser')) || null;
+            } catch(e) {}
             
             const isAdmin = currentUser && currentUser.role === 'admin';
-            
+            const overlay = document.getElementById('maintenanceOverlay');
+
             if (maintSettings.active && !isAdmin) {
-                const overlay = document.getElementById('maintenanceOverlay');
                 if (overlay) overlay.style.display = 'flex';
 
                 if (maintSettings.eta) {
-                    document.getElementById('maintEtaBadge').innerHTML = `<i class="fa-solid fa-clock"></i> ETA: ${maintSettings.eta}`;
+                    const badge = document.getElementById('maintEtaBadge');
+                    if(badge) badge.innerHTML = `<i class="fa-solid fa-clock"></i> ETA: ${maintSettings.eta}`;
                 }
                 if (maintSettings.message) {
-                    document.getElementById('maintMsgText').innerText = maintSettings.message;
+                    const msg = document.getElementById('maintMsgText');
+                    if(msg) msg.innerText = maintSettings.message;
                 }
+            } else {
+                if (overlay) overlay.style.display = 'none';
+            }
+        }
+
+        // Run when page loads
+        window.addEventListener('DOMContentLoaded', checkMaintenanceStatus);
+
+        // Run instantly if storage updates from Admin Panel tab
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'dcwolf_maint_settings') {
+                checkMaintenanceStatus();
             }
         });
     </script>
