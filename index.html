@@ -304,11 +304,11 @@
 
                 if (maintSettings.eta) {
                     const badge = document.getElementById('maintEtaBadge');
-                    if(badge) badge.innerHTML = `<i class="fa-solid fa-clock"></i> ETA: ${maintSettings.eta}`;
+                    if (badge) badge.innerHTML = `<i class="fa-solid fa-clock"></i> ETA: ${maintSettings.eta}`;
                 }
                 if (maintSettings.message) {
                     const msg = document.getElementById('maintMsgText');
-                    if(msg) msg.innerText = maintSettings.message;
+                    if (msg) msg.innerText = maintSettings.message;
                 }
             } else {
                 if (overlay) overlay.style.display = 'none';
