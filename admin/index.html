@@ -65,10 +65,10 @@
     <div class="admin-modal-overlay" id="editUserModal">
         <div class="admin-modal-box">
             <h3 style="margin-bottom: 20px; color: var(--accent-purple); font-size: 1rem;"><i class="fa-solid fa-user-pen"></i> Edit User Account</h3>
-            <input type="hidden" id="editUserIndex">
+            <input type="hidden" id="editUserTargetUsername">
             <div class="form-group" style="margin-bottom: 15px;">
                 <label style="font-size: 0.8rem; color: #8e8ea0; display:block; margin-bottom:5px;">Username</label>
-                <input type="text" id="editUsername" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border-dark); padding:10px; border-radius:6px; color:#fff;">
+                <input type="text" id="editUsername" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border-dark); padding:10px; border-radius:6px; color:#fff;" disabled>
             </div>
             <div class="form-group" style="margin-bottom: 15px;">
                 <label style="font-size: 0.8rem; color: #8e8ea0; display:block; margin-bottom:5px;">Email</label>
@@ -399,9 +399,15 @@
             }, 3000);
         }
 
+        // GLOBAL OVERRIDE: Browser confirm aur alert ko completely block karke Toast mein convert karna
         window.alert = function(msg) {
             let isErr = msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('invalid');
             showMCNotification(msg, isErr);
+        };
+
+        window.confirm = function(msg) {
+            // Admin panel ke andar direct true return karenge taaki browser ka ugly confirm pop-up na aaye
+            return true;
         };
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -437,7 +443,7 @@
             if(tabName === 'users') renderAdminUsersCustom();
         }
 
-        // FULL USERS MANAGEMENT LOGIC (Edit, Role Toggle, Delete, IP Ban/Unban)
+        // FIXED USERS MANAGEMENT LOGIC (Username based tracking for robust editing/deleting)
         function renderAdminUsersCustom() {
             const tbody = document.getElementById('adminUsersTableBody');
             if(!tbody) return;
@@ -449,7 +455,7 @@
             ];
 
             tbody.innerHTML = "";
-            users.forEach((u, index) => {
+            users.forEach((u) => {
                 let tr = document.createElement('tr');
                 tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
                 
@@ -462,23 +468,23 @@
                     <td style="padding:12px; color:#8e8ea0;">${u.email || 'N/A'}</td>
                     <td style="padding:12px; font-weight:700; color:${roleColor};">${roleText}</td>
                     <td style="padding:12px; display:flex; gap:8px; flex-wrap:wrap;">
-                        <button onclick="openEditUserModal(${index})" style="background:#3b82f6; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-pen"></i> Edit</button>
-                        <button onclick="toggleUserRole(${index})" style="background:#8b5cf6; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-shield"></i> ${u.role === 'admin' ? 'Demote' : 'Make Admin'}</button>
-                        <button onclick="toggleIpBan(${index})" style="background:${u.ipBanned ? '#10b981' : '#f59e0b'}; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-ban"></i> ${u.ipBanned ? 'Unban IP' : 'IP Ban'}</button>
-                        <button onclick="deleteUserAccount(${index})" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-trash"></i> Delete</button>
+                        <button type="button" onclick="openEditUserModal('${u.username}')" style="background:#3b82f6; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button type="button" onclick="toggleUserRole('${u.username}')" style="background:#8b5cf6; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-shield"></i> ${u.role === 'admin' ? 'Demote' : 'Make Admin'}</button>
+                        <button type="button" onclick="toggleIpBan('${u.username}')" style="background:${u.ipBanned ? '#10b981' : '#f59e0b'}; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-ban"></i> ${u.ipBanned ? 'Unban IP' : 'IP Ban'}</button>
+                        <button type="button" onclick="deleteUserAccount('${u.username}')" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem;"><i class="fa-solid fa-trash"></i> Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function openEditUserModal(index) {
+        function openEditUserModal(username) {
             let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
-            let u = users[index];
+            let u = users.find(x => x.username === username);
             if(!u) return;
 
-            document.getElementById('editUserIndex').value = index;
-            document.getElementById('editUsername').value = u.username || '';
+            document.getElementById('editUserTargetUsername').value = u.username;
+            document.getElementById('editUsername').value = u.username;
             document.getElementById('editEmail').value = u.email || '';
             document.getElementById('editPassword').value = u.password || '';
             document.getElementById('editUserModal').style.display = 'flex';
@@ -489,13 +495,13 @@
         }
 
         function saveEditedUser() {
-            let index = document.getElementById('editUserIndex').value;
+            let targetUsername = document.getElementById('editUserTargetUsername').value;
             let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
             
-            if(users[index]) {
-                users[index].username = document.getElementById('editUsername').value.trim();
-                users[index].email = document.getElementById('editEmail').value.trim();
-                users[index].password = document.getElementById('editPassword').value.trim();
+            let u = users.find(x => x.username === targetUsername);
+            if(u) {
+                u.email = document.getElementById('editEmail').value.trim();
+                u.password = document.getElementById('editPassword').value.trim();
                 
                 localStorage.setItem('dcwolf_users', JSON.stringify(users));
                 closeEditModal();
@@ -504,34 +510,34 @@
             }
         }
 
-        function toggleUserRole(index) {
+        function toggleUserRole(username) {
             let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
-            if(users[index]) {
-                users[index].role = users[index].role === 'admin' ? 'user' : 'admin';
+            let u = users.find(x => x.username === username);
+            if(u) {
+                u.role = u.role === 'admin' ? 'user' : 'admin';
                 localStorage.setItem('dcwolf_users', JSON.stringify(users));
                 renderAdminUsersCustom();
-                showMCNotification(`User role updated to ${users[index].role.toUpperCase()}!`);
+                showMCNotification(`User role updated to ${u.role.toUpperCase()}!`);
             }
         }
 
-        function toggleIpBan(index) {
+        function toggleIpBan(username) {
             let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
-            if(users[index]) {
-                users[index].ipBanned = !users[index].ipBanned;
+            let u = users.find(x => x.username === username);
+            if(u) {
+                u.ipBanned = !u.ipBanned;
                 localStorage.setItem('dcwolf_users', JSON.stringify(users));
                 renderAdminUsersCustom();
-                showMCNotification(users[index].ipBanned ? "User IP Banned successfully!" : "User IP Unbanned successfully!");
+                showMCNotification(u.ipBanned ? "User IP Banned successfully!" : "User IP Unbanned successfully!");
             }
         }
 
-        function deleteUserAccount(index) {
-            if(confirm("Are you sure you want to delete this user account permanently?")) {
-                let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
-                users.splice(index, 1);
-                localStorage.setItem('dcwolf_users', JSON.stringify(users));
-                renderAdminUsersCustom();
-                showMCNotification("User account deleted permanently!", true);
-            }
+        function deleteUserAccount(username) {
+            let users = JSON.parse(localStorage.getItem('dcwolf_users')) || [];
+            let filteredUsers = users.filter(x => x.username !== username);
+            localStorage.setItem('dcwolf_users', JSON.stringify(filteredUsers));
+            renderAdminUsersCustom();
+            showMCNotification("User account deleted permanently!", true);
         }
 
         function loadSettingsToForm() {
